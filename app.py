@@ -34,104 +34,121 @@ def get_base64_of_bin_file(bin_file):
 
 # --- Login / Register UI ---
 if not st.session_state.authenticated:
-    st.markdown("""
-        <style>
-        /* Modern Clean App Background (Soft Blue-Gray) */
+    try:
+        bg_image = get_base64_of_bin_file("static/images/login_bg.png")
+        bg_css = f"""
+        .stApp {{
+            background-image: linear-gradient(rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.8)), url("data:image/png;base64,{bg_image}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #0f172a;
+        }}
+        """
+    except Exception:
+        bg_css = """
         .stApp {
             background-color: #f8fafc;
             color: #0f172a;
         }
+        """
+
+    st.markdown(f"""
+        <style>
+        {bg_css}
         
         /* Enlarged Typography for Title */
-        .login-title {
+        .login-title {{
             text-align: center;
-            font-size: 5rem;
+            font-size: 6.5rem;
             font-weight: 900;
             margin-bottom: -0.5rem;
             color: #0f172a;
-            letter-spacing: -2.5px;
-        }
+            letter-spacing: -3px;
+            text-shadow: 0 4px 15px rgba(255,255,255, 0.8);
+        }}
         
         /* Highlight Accent on Title */
-        .title-accent {
+        .title-accent {{
             color: #3b82f6;
-        }
+        }}
         
-        .login-subtitle {
+        .login-subtitle {{
             text-align: center;
-            font-size: 1.25rem;
-            color: #64748b;
-            margin-bottom: 3rem;
+            font-size: 1.4rem;
+            color: #475569;
+            margin-bottom: 3.5rem;
             font-weight: 500;
-        }
+        }}
         
-        /* Clean Solid White Container styling (No Glass) */
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-            background-color: #ffffff !important;
+        /* Clean Solid White Container styling with wide feel */
+        div[data-testid="stVerticalBlockBorderWrapper"] {{
+            background-color: rgba(255, 255, 255, 0.95) !important;
+            backdrop-filter: blur(8px);
             border-radius: 16px !important;
             border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
-            padding: 2.5rem 3rem !important;
-        }
+            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1), 0 10px 15px -5px rgba(0, 0, 0, 0.04) !important;
+            padding: 3rem 4rem !important;
+        }}
         
         /* Vertical Centering */
-        .block-container {
+        .block-container {{
             padding-top: 5rem;
-            max-width: 800px !important;
-        }
+            max-width: 1000px !important;
+        }}
         
         /* High Contrast Input fields */
-        div[data-baseweb="input"] {
+        div[data-baseweb="input"] {{
             background-color: #f1f5f9;
             border-radius: 8px;
             border: 2px solid transparent;
             transition: all 0.2s ease;
-        }
+        }}
         
-        div[data-baseweb="input"]:focus-within {
+        div[data-baseweb="input"]:focus-within {{
             border-color: #3b82f6;
             background-color: #ffffff;
             box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
-        }
+        }}
         
-        button[kind="primary"] {
+        button[kind="primary"] {{
             background-color: #3b82f6;
             border: none;
             color: white;
             font-weight: 600;
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             border-radius: 8px;
             transition: all 0.2s ease;
-            padding: 0.75rem 1rem;
+            padding: 0.8rem 1rem;
             box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
             margin-top: 1rem;
-        }
+        }}
         
-        button[kind="primary"]:hover {
+        button[kind="primary"]:hover {{
             background-color: #2563eb;
-            transform: translateY(-1px);
-            box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.3);
-        }
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px -3px rgba(59, 130, 246, 0.3);
+        }}
         
         /* Form text colors */
-        .stTextInput p, .stRadio p, label {
+        .stTextInput p, .stRadio p, label {{
             color: #334155 !important;
             font-weight: 600 !important;
-            font-size: 0.95rem;
-        }
+            font-size: 1rem;
+        }}
         
         /* Fix the error box if it appears */
-        .stAlert {
+        .stAlert {{
             background-color: #fef2f2;
             color: #991b1b;
             border: 1px solid #f87171;
             border-radius: 8px;
-        }
+        }}
         </style>
     """, unsafe_allow_html=True)
 
     # Use columns to narrow the form width and center it
-    _, col_center, _ = st.columns([1, 1.4, 1])
+    _, col_center, _ = st.columns([1, 2, 1])
     
     with col_center:
         st.markdown('<p class="login-title">Quot<span class="title-accent">er</span></p>', unsafe_allow_html=True)
