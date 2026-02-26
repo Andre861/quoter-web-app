@@ -1,7 +1,7 @@
 import pdfkit
 from jinja2 import Environment, FileSystemLoader
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Note: pdfkit requires wkhtmltopdf to be installed on the system.
 
@@ -20,234 +20,224 @@ def generate_final_pdf(marked_up_tables, config):
     <head>
         <meta charset="utf-8">
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
             
             body {{
-                font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                color: #1e293b;
-                background-color: #f8fafc;
+                font-family: 'Inter', sans-serif;
+                color: #334155;
+                background-color: #ffffff;
                 margin: 0;
-                padding: 40px;
-                line-height: 1.5;
-            }}
-            .invoice-box {{
-                max-width: 900px;
-                margin: auto;
-                padding: 40px;
-                background: #ffffff;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-                border-radius: 12px;
-            }}
-            .header-table {{
-                width: 100%;
-                margin-bottom: 40px;
-            }}
-            .header-table td {{
-                vertical-align: top;
-            }}
-            .title-area h1 {{
-                font-size: 42px;
-                font-weight: 700;
-                color: #0f172a;
-                margin: 0;
-                letter-spacing: -1px;
-            }}
-            .title-area p {{
-                color: #64748b;
-                margin-top: 5px;
-                font-size: 14px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-            }}
-            .details-table {{
-                width: 100%;
-                margin-bottom: 40px;
-                border-collapse: collapse;
-            }}
-            .details-table td {{
-                vertical-align: top;
-                width: 50%;
-                padding: 0;
-            }}
-            .info-block {{
-                background-color: #f1f5f9;
-                padding: 24px;
-                border-radius: 8px;
-            }}
-            .info-block.sender {{
-                margin-right: 12px;
-                border-top: 4px solid #3b82f6; /* Blue accent */
-            }}
-            .info-block.recipient {{
-                margin-left: 12px;
-                border-top: 4px solid #10b981; /* Green accent */
-            }}
-            .info-block h3 {{
-                color: #64748b;
-                font-size: 12px;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin: 0 0 12px 0;
-            }}
-            .info-name {{
-                font-size: 18px;
-                font-weight: 600;
-                color: #0f172a;
-                margin: 0 0 4px 0;
-            }}
-            .info-text {{
-                color: #475569;
-                font-size: 14px;
-                margin: 0;
+                padding: 40px 50px;
                 line-height: 1.6;
             }}
-            .job-description-box {{
-                background-color: #fef2f2;
-                border: 1px solid #fee2e2;
-                border-left: 4px solid #ef4444; /* Red accent */
-                padding: 20px;
-                border-radius: 8px;
+            .invoice-header {{
+                width: 100%;
+                margin-bottom: 40px;
+                border-bottom: 2px solid #3b82f6;
+                padding-bottom: 20px;
+            }}
+            .invoice-header td {{
+                vertical-align: top;
+            }}
+            .company-name {{
+                font-size: 32px;
+                font-weight: 800;
+                color: #1e293b;
+                margin: 0 0 5px 0;
+                letter-spacing: -0.5px;
+            }}
+            .company-details {{
+                font-size: 13px;
+                color: #64748b;
+            }}
+            .document-title {{
+                font-size: 36px;
+                font-weight: 800;
+                color: #3b82f6;
+                margin: 0;
+                text-align: right;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }}
+            .document-meta {{
+                text-align: right;
+                font-size: 14px;
+                color: #64748b;
+                margin-top: 8px;
+            }}
+            
+            .addresses-table {{
+                width: 100%;
                 margin-bottom: 40px;
             }}
-            .job-description-box h3 {{
-                color: #991b1b;
+            .addresses-table td {{
+                vertical-align: top;
+                width: 50%;
+            }}
+            .address-block {{
+                padding-right: 40px;
+            }}
+            .address-label {{
                 font-size: 12px;
+                font-weight: 700;
+                color: #94a3b8;
                 text-transform: uppercase;
                 letter-spacing: 1px;
-                margin: 0 0 8px 0;
+                margin-bottom: 8px;
+                border-bottom: 1px solid #e2e8f0;
+                padding-bottom: 4px;
             }}
-            .job-description-box p {{
-                color: #7f1d1d;
+            .address-name {{
+                font-size: 16px;
+                font-weight: 700;
+                color: #1e293b;
+                margin: 0 0 4px 0;
+            }}
+            .address-text {{
                 font-size: 14px;
+                color: #475569;
                 margin: 0;
-                white-space: pre-wrap;
+                line-height: 1.5;
             }}
-            .items-section {{
+            
+            .job-details {{
+                background-color: #f8fafc;
+                border-left: 4px solid #3b82f6;
+                padding: 16px 24px;
+                margin-bottom: 40px;
+                border-radius: 0 8px 8px 0;
+            }}
+            .job-details h3 {{
+                margin: 0 0 8px 0;
+                font-size: 12px;
+                font-weight: 700;
+                color: #3b82f6;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+            }}
+            .job-details p {{
+                margin: 0;
+                font-size: 14px;
+                color: #334155;
+            }}
+            
+            .items-table-container {{
                 margin-bottom: 40px;
             }}
-            .items-section h2 {{
-                font-size: 18px;
-                color: #0f172a;
-                margin-bottom: 16px;
-                padding-bottom: 8px;
-                border-bottom: 2px solid #e2e8f0;
-            }}
+            
             .dataframe {{
                 width: 100%;
-                border-collapse: separate;
-                border-spacing: 0;
+                border-collapse: collapse;
                 margin-bottom: 30px;
-                font-size: 14px;
+                font-size: 13px;
             }}
             .dataframe th {{
-                background-color: #f8fafc;
+                background-color: #f1f5f9;
                 color: #475569;
-                font-weight: 600;
+                font-weight: 700;
                 text-align: left;
-                padding: 14px 16px;
+                padding: 12px 16px;
                 border-bottom: 2px solid #cbd5e1;
-                border-top: 1px solid #e2e8f0;
+                text-transform: uppercase;
+                font-size: 11px;
+                letter-spacing: 0.5px;
             }}
-            .dataframe th:first-child {{ border-left: 1px solid #e2e8f0; border-top-left-radius: 6px; }}
-            .dataframe th:last-child {{ border-right: 1px solid #e2e8f0; border-top-right-radius: 6px; }}
-            
             .dataframe td {{
-                padding: 14px 16px;
+                padding: 12px 16px;
                 color: #334155;
                 border-bottom: 1px solid #e2e8f0;
             }}
-            .dataframe td:first-child {{ border-left: 1px solid #e2e8f0; }}
-            .dataframe td:last-child {{ border-right: 1px solid #e2e8f0; }}
-            
-            .dataframe tr:last-child td:first-child {{ border-bottom-left-radius: 6px; }}
-            .dataframe tr:last-child td:last-child {{ border-bottom-right-radius: 6px; }}
-            
             .dataframe tr:nth-child(even) td {{
-                background-color: #f8fafc;
+                background-color: #fafafa;
             }}
             
-            /* Highlight the Grand Total Row */
-            .dataframe tr:last-child td {{
-                background-color: #f1f5f9;
-                font-weight: 700;
-                color: #0f172a;
-                font-size: 15px;
-                border-top: 2px solid #cbd5e1;
-            }}
-            
-            /* Align numbers to the right for cleaner look */
+            /* Align right for money/number columns */
             .dataframe td:not(:first-child), .dataframe th:not(:first-child) {{
                 text-align: right;
             }}
+            
+            /* Subtotals and Totals Rows */
+            .dataframe tr:last-child td,
+            .dataframe tr:nth-last-child(2) td,
+            .dataframe tr:nth-last-child(3) td,
+            .dataframe tr:nth-last-child(4) td {{
+                border-bottom: none;
+                background-color: #ffffff;
+            }}
+            
+            .dataframe tr:last-child td {{
+                border-top: 2px solid #334155;
+                border-bottom: 2px solid #334155;
+                font-size: 15px;
+                font-weight: 700;
+                color: #0f172a;
+                background-color: #f8fafc;
+            }}
 
             .footer {{
-                margin-top: 40px;
+                margin-top: 60px;
                 text-align: center;
                 color: #94a3b8;
-                font-size: 13px;
+                font-size: 12px;
                 padding-top: 24px;
                 border-top: 1px solid #e2e8f0;
             }}
         </style>
     </head>
     <body>
-        <div class="invoice-box">
-            <table class="header-table">
-                <tr>
-                    <td class="title-area">
-                        <h1>QUOTATION</h1>
-                        <p>Generated: {datetime.now().strftime("%B %d, %Y")}</p>
-                    </td>
-                </tr>
-            </table>
-            
-            <table class="details-table">
-                <tr>
-                    <td>
-                        <div class="info-block sender">
-                            <h3>From</h3>
-                            <p class="info-name">{config.get('sender_name', 'Default Sender')}</p>
-                            <p class="info-text">
-                                {config.get('sender_phone', '')}{'<br>' if config.get('sender_phone') else ''}
-                                {config.get('sender_email', '')}<br>
-                                {sender_address_html}
-                            </p>
-                        </div>
-                    </td>
-                    <td>
-                        <div class="info-block recipient">
-                            <h3>Quotation For</h3>
-                            <p class="info-name">{config.get('recipient_name', 'Client')}</p>
-                            <p class="info-text">
-                                {config.get('recipient_contact', '')}<br>
-                                {recipient_address_html}
-                            </p>
-                        </div>
-                    </td>
-                </tr>
-            </table>
-            
-            {f'''
-            <div class="job-description-box">
-                <h3>Job Description / Notes</h3>
-                <p>{config.get('job_description', '')}</p>
-            </div>
-            ''' if config.get('job_description') else ''}
-            
-            <div class="items-section">
-                <h2>Line Items</h2>
+        <table class="invoice-header">
+            <tr>
+                <td>
+                    <h1 class="company-name">{config.get('sender_name', 'Your Company')}</h1>
+                    <div class="company-details">
+                        {config.get('sender_phone', '')}{' | ' if config.get('sender_phone') and config.get('sender_email') else ''}{config.get('sender_email', '')}<br>
+                        {sender_address_html}
+                    </div>
+                </td>
+                <td style="text-align: right;">
+                    <h1 class="document-title">Quotation</h1>
+                    <div class="document-meta">
+                        <strong>Date:</strong> {datetime.now().strftime("%B %d, %Y")}<br>
+                        <strong>Valid Until:</strong> {(datetime.now() + timedelta(days=14)).strftime("%B %d, %Y")}
+                    </div>
+                </td>
+            </tr>
+        </table>
+        
+        <table class="addresses-table">
+            <tr>
+                <td class="address-block">
+                    <div class="address-label">Quotation For</div>
+                    <div class="address-name">{config.get('recipient_name', 'Client Name')}</div>
+                    <p class="address-text">
+                        {config.get('recipient_contact', '')}<br>
+                        {recipient_address_html}
+                    </p>
+                </td>
+                <td class="address-block">
+                    <!-- Space for dual-column alignment -->
+                </td>
+            </tr>
+        </table>
+        
+        {f'''
+        <div class="job-details">
+            <h3>Job Description / Notes</h3>
+            <p>{config.get('job_description', '')}</p>
+        </div>
+        ''' if config.get('job_description') else ''}
+        
+        <div class="items-table-container">
     """
     
     for df in marked_up_tables:
-        # Convert internal tables to HTML, applying the 'dataframe' class defined in CSS
         html_content += df.to_html(index=False, classes='dataframe')
         
     html_content += """
-            </div>
-            
-            <div class="footer">
-                <p>Thank you for your business. This quotation is valid for 14 days. Please contact us with any questions.</p>
-            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Thank you for your business. Please contact us with any questions regarding this quotation.</p>
         </div>
     </body>
     </html>
