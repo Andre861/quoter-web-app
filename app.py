@@ -196,7 +196,7 @@ if st.sidebar.button("Logout"):
     st.session_state.user_email = None
     st.rerun()
 
-st.title("Quoter: Markup Generator")
+st.title("Quoter: Markup Generator 🚀")
 st.write("Upload a retailer quotation to apply markup and generate client-ready files.")
 
 # --- Mode Selection ---
