@@ -344,7 +344,13 @@ if proceed:
             st.write("Enter your items below. The 'Total' column will be automatically calculated as (Quantity × Unit Price) when you generate!")
         elif input_mode == "Upload Existing Quote" and file_type == "pdf":
             show_editor = True
-            st.subheader("Step 2: Review and Correct Extracted Data")
+            col_head1, col_head2 = st.columns([4, 1])
+            with col_head1:
+                st.subheader("Step 2: Review and Correct Extracted Data")
+            with col_head2:
+                if st.button("🔄 Retry Extraction", help="If the data looks wrong, click here to extract it again.", use_container_width=True):
+                    st.session_state.extracted_tables = None
+                    st.rerun()
             st.write("You can edit the cells below directly. Ensure numeric columns are clean (e.g., '100.50' instead of '$100.50').")
             
         edited_tables = []
