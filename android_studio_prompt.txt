@@ -1,0 +1,39 @@
+I want to build a native Android application using Kotlin and Jetpack Compose. This app is called "Quoter", a business utility designed to ingest retailer quotations, apply custom markup, and generate beautiful, client-ready PDF and Excel files directly on the user's phone.
+
+Please generate the necessary architecture, UI screens, and core logic components based on the following comprehensive requirements:
+
+# Core Workflows & UI Navigation
+The app should heavily utilize Material Design 3 and have a Bottom Navigation Bar or a clear Step-by-Step wizard flow. 
+There are two primary input workflows:
+1.  **Upload Existing Quote:** The user selects a `.pdf` or `.xlsx` file from their phone's local storage to be processed.
+2.  **Manual Data Entry:** The user builds a quotation from scratch using an interactive list/grid.
+
+# Screen 1: Configuration & Details
+Regardless of the workflow, the user must configure the following fields:
+*   **Markup Percentage:** Numeric input field.
+*   **Discounts & Taxes:**
+    *   Discount: Numeric input for a Flat Dollar Amount.
+    *   Sales Tax Type: A toggle/radio button between "Percentage (%)" and "Flat Amount ($)".
+    *   Sales Tax Value: Numeric input based on the chosen type above.
+*   **Sender Details:** Company Name, Email, Phone Number, and Address.
+*   **Recipient Details:** Client Company Name, Client Contact Person, and Address.
+*   **Job Details:** A multi-line text area for Notes / Job Description.
+
+# Screen 2: Data Extraction & Editing
+This screen displays the line items of the quotation.
+*   **If Manual Mode:** Show a dynamic list of cards or a grid where users can "Add Row". Each row requires: Description, Quantity, Unit Price, and Total. The app must automatically calculate `Total = Quantity * Unit Price` as the user types (unless the user manually overwrites the Total field, e.g., for a flat "Shipping" fee).
+*   **If PDF Upload:** Use the Google Gemini API (gemini-2.5-flash) to extract tabular data from the PDF bytes. Prompt the AI to "extract ALL tabular items/products across all pages into raw CSV format. Do not summarize or omit data." Once parsed, populate the same editable list/grid from the Manual Mode so the user can verify, correct, or add new rows. 
+*   **If Excel Upload:** Bypass the editable grid. Move straight to processing the Excel file.
+
+# Screen 3: Generation & Preview
+When the user clicks "Generate Quotations", perform the following logic:
+1.  **Math Engine:** For all line items across the tables, sum up the `Totals` to get the `Subtotal`. 
+    *   Subtract the `Discount` from the `Subtotal` (floor at 0).
+    *   Calculate the `Sales Tax` (either flat amount, or percentage applied *after* the discount).
+    *   Add Tax to get the `Grand Total`.
+2.  **PDF Generation:** Take all the line items, details, and totals, and compile them into a beautiful, professional PDF invoice structure. Use native Android APIs like `android.graphics.pdf.PdfDocument` or a library like `iText7`. Place a "Generated: [Current Date]" timestamp at the top.
+3.  **Excel Generation:** Use a library like `Apache POI` to construct an `.xlsx` file. Write the data into cells. It is CRITICAL that the generated Excel file utilizes actual live Excel formulas (e.g., `=SUM(...)` for subtotals, and `=(cell)*{markup}` for prices) so the client can edit the spreadsheet later.
+4.  **Preview:** Display a live, scrolling preview of the generated PDF document directly on the screen.
+5.  **Actions:** Provide two large "Share/Save" buttons. One to save/share the generated `.pdf` to the Android device, and one to save/share the `.xlsx` file.
+
+Please suggest a clean project structure (e.g., MVVM architecture), list the required Gradle dependencies (for Gemini, Apache POI/Excel, and PDF generation), and write the core Composable screens and ViewModel logic to get this application running.

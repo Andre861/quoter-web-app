@@ -1,0 +1,8 @@
+Quoter Web App Development Summary
+
+The "Quoter" web app development is a four-phase plan to convert retailer PDF/Excel quotations into new, marked-up versions while keeping the original calculation logic and adding company details.
+
+1. Planning: Define scope, select tech stack (e.g., OpenPyXL/Tesseract), and set up the environment.
+2. Core Functionality: Build the processing engine: file upload, data parsing (preserving Excel formulas), and user interfaces for markup and company info.
+3. Output Generation: Create the final new Excel (with formulas) and PDF documents, including preview and secure download.
+4. Deployment: Conduct rigorous testing (UAT, calculation checks) and deploy the final product with monitoring.
