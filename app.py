@@ -419,10 +419,10 @@ if proceed:
                             cols_to_keep = []
                             for c in mt.columns:
                                 cl = str(c).lower()
-                                if 'desc' in cl or 'item' in cl: rename_map[c] = 'Description'
-                                elif 'qty' in cl or 'quant' in cl: rename_map[c] = 'Quantity'
+                                if 'total' in cl or 'amount' in cl: rename_map[c] = 'Total'
                                 elif 'price' in cl or 'unit' in cl or 'cost' in cl: rename_map[c] = 'Unit Price'
-                                elif 'total' in cl or 'amount' in cl: rename_map[c] = 'Total'
+                                elif 'qty' in cl or 'quant' in cl: rename_map[c] = 'Quantity'
+                                elif 'desc' in cl or 'item' in cl: rename_map[c] = 'Description'
                                 
                                 if c in rename_map: cols_to_keep.append(c)
                                 
@@ -472,12 +472,20 @@ if proceed:
                         running_total += tax_amount
                         grand_total = running_total
                         
+                        markup_amount = 0.0
+                        if markup_percentage > 0:
+                            multiplier = 1 + (markup_percentage / 100.0)
+                            base_subtotal = subtotal / multiplier
+                            markup_amount = subtotal - base_subtotal
+                        
                         config["calc_subtotal"] = subtotal
                         config["calc_discount"] = discount_val
                         config["calc_tax"] = tax_amount
+                        config["calc_markup"] = markup_amount
                         config["calc_grand_total"] = grand_total
                         config["sales_tax_percentage"] = sales_tax_percentage
                         config["tax_type"] = tax_type
+                        config["markup_percentage"] = markup_percentage
 
                         # Use the specifically filtered tables instead of raw edited
                         pdf_bytes = generate_final_pdf(clean_tables, config)

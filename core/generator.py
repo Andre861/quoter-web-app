@@ -291,6 +291,12 @@ def generate_final_pdf(marked_up_tables, config):
                 <td class="summary-value">${config.get('calc_tax', 0.0):,.2f}</td>
             </tr>
             ''' if config.get("calc_tax", 0) > 0 else ''}
+            {f'''
+            <tr>
+                <td class="summary-label">Markup ({config.get("markup_percentage", 0)}%)</td>
+                <td class="summary-value">${config.get('calc_markup', 0.0):,.2f}</td>
+            </tr>
+            ''' if config.get("calc_markup", 0) > 0 else ''}
             <tr class="summary-total">
                 <td class="summary-label">GRAND TOTAL</td>
                 <td class="summary-value">${config.get('calc_grand_total', 0.0):,.2f}</td>
