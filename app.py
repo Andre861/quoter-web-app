@@ -29,68 +29,78 @@ st.set_page_config(page_title="Quoter", page_icon="📝", layout="wide")
 if not st.session_state.authenticated:
     st.markdown("""
         <style>
-        /* Modern Gradient Background for the entire app */
+        /* Modern Clean Background */
         .stApp {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #ffffff;
+            background-color: #f7f9fa;
+            color: #333333;
         }
         
         /* Typography for Title */
         .login-title {
             text-align: center;
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 800;
             margin-bottom: 0rem;
-            background: -webkit-linear-gradient(45deg, #00C9FF, #92FE9D);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #1A73E8;
             letter-spacing: -1px;
         }
         
         .login-subtitle {
             text-align: center;
             font-size: 1.1rem;
-            color: #cbd5e1;
-            margin-bottom: 2rem;
-            font-weight: 300;
+            color: #5f6368;
+            margin-bottom: 2.5rem;
+            font-weight: 400;
         }
         
-        /* Glassmorphism Container styling */
+        /* Clean Container styling */
         div[data-testid="stVerticalBlockBorderWrapper"] {
-            background: rgba(255, 255, 255, 0.05) !important;
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 15px !important;
-            border: 1px solid rgba(255, 255, 255, 0.1) !important;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3) !important;
-            padding: 1.5rem !important;
+            background: #ffffff !important;
+            border-radius: 12px !important;
+            border: 1px solid #e0e0e0 !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+            padding: 2rem !important;
         }
         
         /* Vertical Centering */
         .block-container {
             padding-top: 6rem;
-            max-width: 1000px !important;
+            max-width: 900px !important;
         }
         
         /* Input fields and buttons styling */
         div[data-baseweb="input"] {
-            background-color: rgba(255,255,255,0.1);
-            border-radius: 8px;
+            background-color: #f1f3f4;
+            border-radius: 6px;
+            border: 1px solid transparent;
+        }
+        
+        div[data-baseweb="input"]:focus-within {
+            border-color: #1A73E8;
+            background-color: #ffffff;
         }
         
         button[kind="primary"] {
-            background: linear-gradient(45deg, #00C9FF, #92FE9D);
+            background-color: #1A73E8;
             border: none;
-            color: #000;
+            color: white;
             font-weight: 600;
-            border-radius: 8px;
-            transition: all 0.3s ease;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            padding: 0.5rem 1rem;
         }
         
         button[kind="primary"]:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 201, 255, 0.4);
+            background-color: #1557b0;
+            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
         }
+        
+        /* Form text colors */
+        .stTextInput p {
+            color: #444444 !important;
+            font-weight: 500;
+        }
+        
         </style>
     """, unsafe_allow_html=True)
 
