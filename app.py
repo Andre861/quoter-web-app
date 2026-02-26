@@ -371,13 +371,16 @@ if proceed:
                     import pandas as pd
                     
                     logo_base64 = None
+                    logo_mime = "image/png"
                     if uploaded_logo:
                         # Extract base64 dynamically from uploaded file
                         import base64
                         logo_base64 = base64.b64encode(uploaded_logo.getvalue()).decode()
+                        logo_mime = uploaded_logo.type
 
                     config = {
                         "logo_base64": logo_base64,
+                        "logo_mime": logo_mime,
                         "sender_name": sender_name,
                         "sender_email": sender_email,
                         "sender_phone": sender_phone,
@@ -422,13 +425,36 @@ if proceed:
                                 except Exception as sum_e:
                                     print(f"Summing error on col {last_col}:", sum_e)
                                     
-                        # Drop any weird columns that aren't precisely these 4 core fields
-                        target_columns = ["Description", "Quantity", "Unit Price", "Total"]
+                        # Smartly rename and filter columns to the core 4 to ensure totals calculation succeeds
                         clean_tables = []
                         for mt in marked_up_tables:
-                            # Keep only columns that exist in the target set to prevent key errors
-                            cols_to_keep = [c for c in mt.columns if c in target_columns]
-                            clean_mt = mt[cols_to_keep]
+                            rename_map = {}
+                            cols_to_keep = []
+                            for c in mt.columns:
+                                cl = str(c).lower()
+                                if 'desc' in cl or 'item' in cl: rename_map[c] = 'Description'
+                                elif 'qty' in cl or 'quant' in cl: rename_map[c] = 'Quantity'
+                                elif 'price' in cl or 'unit' in cl or 'cost' in cl: rename_map[c] = 'Unit Price'
+                                elif 'total' in cl or 'amount' in cl: rename_map[c] = 'Total'
+                                
+                                if c in rename_map: cols_to_keep.append(c)
+                                
+                            # If no standard columns were found, keep everything to be safe
+                            if not cols_to_keep:
+                                cols_to_keep = list(mt.columns)
+                                
+                            clean_mt = mt[cols_to_keep].copy()
+                            clean_mt.rename(columns=rename_map, inplace=True)
+                            
+                            # Drop duplicated column names if they mapped to the same target
+                            if len(clean_mt.columns) != len(set(clean_mt.columns)):
+                                clean_mt = clean_mt.loc[:, ~clean_mt.columns.duplicated()]
+                                
+                            # Reorder to exactly [Description, Quantity, Unit Price, Total]
+                            final_order = [c for c in ["Description", "Quantity", "Unit Price", "Total"] if c in clean_mt.columns]
+                            if final_order:
+                                clean_mt = clean_mt[final_order + [c for c in clean_mt.columns if c not in final_order]]
+                                
                             clean_tables.append(clean_mt)
                             
                         running_total = subtotal

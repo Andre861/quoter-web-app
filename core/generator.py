@@ -223,7 +223,7 @@ def generate_final_pdf(marked_up_tables, config):
         <table class="invoice-header">
             <tr>
                 <td>
-                    {f'<img src="data:image/png;base64,{config.get("logo_base64")}" style="max-height: 80px; margin-bottom: 15px;">' if config.get("logo_base64") else ''}
+                    {f'<img src="data:{config.get("logo_mime", "image/png")};base64,{config.get("logo_base64")}" style="max-height: 80px; margin-bottom: 15px;">' if config.get("logo_base64") else ''}
                     <h1 class="company-name">{config.get('sender_name', 'Your Company')}</h1>
                     <div class="company-details">
                         {config.get('sender_phone', '')}{' | ' if config.get('sender_phone') and config.get('sender_email') else ''}{config.get('sender_email', '')}<br>
@@ -297,13 +297,11 @@ def generate_final_pdf(marked_up_tables, config):
             </tr>
         </table>
         
-        {f'''
         <div class="signature-block">
             <div class="signature-line"></div>
-            <div class="signature-name">{config.get("signature_name")}</div>
+            <div class="signature-name">{config.get("signature_name", "")}</div>
             <div class="signature-label">Authorized Signature</div>
         </div>
-        ''' if config.get("signature_name") else ''}
         
         <div class="footer">
             <p>Thank you for your business. Please contact us with any questions regarding this quotation.</p>
