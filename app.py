@@ -268,6 +268,7 @@ if proceed:
             sales_tax_percentage = 0.0
         
         st.subheader("Sender Details")
+        uploaded_logo = st.file_uploader("Company Logo (Optional)", type=["png", "jpg", "jpeg"])
         sender_name = st.text_input("Sender Company Name", value="My Company LLC")
         sender_email = st.text_input("Sender Email", value="sales@mycompany.com")
         sender_phone = st.text_input("Sender Phone", placeholder="+1 (555) 123-4567")
@@ -281,6 +282,7 @@ if proceed:
         
     st.subheader("Job Details")
     job_description = st.text_area("Job Description / Notes", help="Add any context or description about this quotation.")
+    signature_name = st.text_input("Signed By:", placeholder="John Doe", help="Name to appear in the signature block of the PDF.")
     
     st.markdown("---")
     
@@ -368,7 +370,14 @@ if proceed:
                     from core.generator import generate_final_pdf, generate_excel_from_pdf
                     import pandas as pd
                     
+                    logo_base64 = None
+                    if uploaded_logo:
+                        # Extract base64 dynamically from uploaded file
+                        import base64
+                        logo_base64 = base64.b64encode(uploaded_logo.getvalue()).decode()
+
                     config = {
+                        "logo_base64": logo_base64,
                         "sender_name": sender_name,
                         "sender_email": sender_email,
                         "sender_phone": sender_phone,
@@ -380,7 +389,8 @@ if proceed:
                         "discount_flat": discount_flat,
                         "tax_type": "percentage" if tax_type == "Percentage (%)" else "flat",
                         "sales_tax_percentage": sales_tax_percentage,
-                        "sales_tax_flat": sales_tax_flat
+                        "sales_tax_flat": sales_tax_flat,
+                        "signature_name": signature_name
                     }
                     
                     try:
@@ -412,54 +422,38 @@ if proceed:
                                 except Exception as sum_e:
                                     print(f"Summing error on col {last_col}:", sum_e)
                                     
-                        # Append Totals to the last table natively so it renders in the HTML PDF
-                        if marked_up_tables:
-                            last_table = marked_up_tables[-1]
-                            rows_to_add = []
+                        # Drop any weird columns that aren't precisely these 4 core fields
+                        target_columns = ["Description", "Quantity", "Unit Price", "Total"]
+                        clean_tables = []
+                        for mt in marked_up_tables:
+                            # Keep only columns that exist in the target set to prevent key errors
+                            cols_to_keep = [c for c in mt.columns if c in target_columns]
+                            clean_mt = mt[cols_to_keep]
+                            clean_tables.append(clean_mt)
                             
-                            # Subtotal Row
-                            sub_row = {col: "" for col in last_table.columns}
-                            sub_row[last_table.columns[0]] = "SUBTOTAL"
-                            sub_row[last_table.columns[-1]] = f"${subtotal:,.2f}"
-                            rows_to_add.append(sub_row)
+                        running_total = subtotal
+                        discount_val = discount_flat
+                        running_total -= discount_val
+                        if running_total < 0: running_total = 0.0
+                        
+                        tax_amount = 0.0
+                        if tax_type == "Percentage (%)" and sales_tax_percentage > 0:
+                            tax_amount = running_total * (sales_tax_percentage / 100.0)
+                        elif tax_type == "Flat Amount ($)" and sales_tax_flat > 0:
+                            tax_amount = sales_tax_flat
                             
-                            running_total = subtotal
-                            
-                            # Discount Row
-                            if discount_flat > 0:
-                                disc_row = {col: "" for col in last_table.columns}
-                                disc_row[last_table.columns[0]] = "DISCOUNT"
-                                disc_row[last_table.columns[-1]] = f"-${discount_flat:,.2f}"
-                                rows_to_add.append(disc_row)
-                                running_total -= discount_flat
-                                # Floor at 0
-                                if running_total < 0: running_total = 0.0
-                            
-                            # Sales Tax Row
-                            if tax_type == "Percentage (%)" and sales_tax_percentage > 0:
-                                tax_amount = running_total * (sales_tax_percentage / 100.0)
-                                tax_row = {col: "" for col in last_table.columns}
-                                tax_row[last_table.columns[0]] = f"SALES TAX ({sales_tax_percentage}%)"
-                                tax_row[last_table.columns[-1]] = f"${tax_amount:,.2f}"
-                                rows_to_add.append(tax_row)
-                                running_total += tax_amount
-                            elif tax_type == "Flat Amount ($)" and sales_tax_flat > 0:
-                                tax_row = {col: "" for col in last_table.columns}
-                                tax_row[last_table.columns[0]] = "SALES TAX (Flat)"
-                                tax_row[last_table.columns[-1]] = f"${sales_tax_flat:,.2f}"
-                                rows_to_add.append(tax_row)
-                                running_total += sales_tax_flat
-                                
-                            # Grand Total Row
-                            gt_row = {col: "" for col in last_table.columns}
-                            gt_row[last_table.columns[0]] = "GRAND TOTAL"
-                            gt_row[last_table.columns[-1]] = f"${running_total:,.2f}"
-                            rows_to_add.append(gt_row)
-                            
-                            # Append using concat
-                            marked_up_tables[-1] = pd.concat([last_table, pd.DataFrame(rows_to_add)], ignore_index=True)
-                            
-                        pdf_bytes = generate_final_pdf(marked_up_tables, config)
+                        running_total += tax_amount
+                        grand_total = running_total
+                        
+                        config["calc_subtotal"] = subtotal
+                        config["calc_discount"] = discount_val
+                        config["calc_tax"] = tax_amount
+                        config["calc_grand_total"] = grand_total
+                        config["sales_tax_percentage"] = sales_tax_percentage
+                        config["tax_type"] = tax_type
+
+                        # Use the specifically filtered tables instead of raw edited
+                        pdf_bytes = generate_final_pdf(clean_tables, config)
                         excel_from_pdf_bytes = generate_excel_from_pdf(edited_tables, config, markup_percentage)
                         
                         # Store generated files in session state so downloading one doesn't erase the other

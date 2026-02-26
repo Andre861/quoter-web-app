@@ -122,13 +122,13 @@ def generate_final_pdf(marked_up_tables, config):
             }}
             
             .items-table-container {{
-                margin-bottom: 40px;
+                margin-bottom: 20px;
             }}
             
             .dataframe {{
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 30px;
+                margin-bottom: 10px;
                 font-size: 13px;
             }}
             .dataframe th {{
@@ -156,22 +156,57 @@ def generate_final_pdf(marked_up_tables, config):
                 text-align: right;
             }}
             
-            /* Subtotals and Totals Rows */
-            .dataframe tr:last-child td,
-            .dataframe tr:nth-last-child(2) td,
-            .dataframe tr:nth-last-child(3) td,
-            .dataframe tr:nth-last-child(4) td {{
-                border-bottom: none;
-                background-color: #ffffff;
+            .summary-table {{
+                width: 40%;
+                margin-left: auto;
+                border-collapse: collapse;
+                margin-bottom: 40px;
+            }}
+            .summary-table td {{
+                padding: 10px 16px;
+                font-size: 14px;
+                color: #334155;
+            }}
+            .summary-label {{
+                font-weight: 600;
+                text-align: right;
+                color: #64748b;
+            }}
+            .summary-value {{
+                text-align: right;
+                font-family: monospace;
+                font-size: 15px;
+            }}
+            .summary-total td {{
+                border-top: 2px solid #1e293b;
+                color: #0f172a;
+                font-weight: 800;
+                font-size: 16px;
+                background-color: #f8fafc;
+            }}
+            .summary-total .summary-label {{
+                color: #0f172a;
             }}
             
-            .dataframe tr:last-child td {{
-                border-top: 2px solid #334155;
-                border-bottom: 2px solid #334155;
-                font-size: 15px;
+            .signature-block {{
+                margin-top: 50px;
+                width: 300px;
+            }}
+            .signature-line {{
+                border-bottom: 1px solid #94a3b8;
+                margin-bottom: 8px;
+                height: 40px;
+            }}
+            .signature-name {{
+                font-size: 14px;
                 font-weight: 700;
-                color: #0f172a;
-                background-color: #f8fafc;
+                color: #1e293b;
+            }}
+            .signature-label {{
+                font-size: 12px;
+                color: #64748b;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
             }}
 
             .footer {{
@@ -188,6 +223,7 @@ def generate_final_pdf(marked_up_tables, config):
         <table class="invoice-header">
             <tr>
                 <td>
+                    {f'<img src="data:image/png;base64,{config.get("logo_base64")}" style="max-height: 80px; margin-bottom: 15px;">' if config.get("logo_base64") else ''}
                     <h1 class="company-name">{config.get('sender_name', 'Your Company')}</h1>
                     <div class="company-details">
                         {config.get('sender_phone', '')}{' | ' if config.get('sender_phone') and config.get('sender_email') else ''}{config.get('sender_email', '')}<br>
@@ -233,8 +269,41 @@ def generate_final_pdf(marked_up_tables, config):
     for df in marked_up_tables:
         html_content += df.to_html(index=False, classes='dataframe')
         
-    html_content += """
+    tax_label = f"Sales Tax ({config.get('sales_tax_percentage')}%)" if config.get('tax_type') == 'percentage' else "Sales Tax"
+    
+    html_content += f"""
         </div>
+        
+        <table class="summary-table">
+            <tr>
+                <td class="summary-label">Subtotal</td>
+                <td class="summary-value">${config.get('calc_subtotal', 0.0):,.2f}</td>
+            </tr>
+            {f'''
+            <tr>
+                <td class="summary-label">Discount</td>
+                <td class="summary-value">-${config.get('calc_discount', 0.0):,.2f}</td>
+            </tr>
+            ''' if config.get("calc_discount", 0) > 0 else ''}
+            {f'''
+            <tr>
+                <td class="summary-label">{tax_label}</td>
+                <td class="summary-value">${config.get('calc_tax', 0.0):,.2f}</td>
+            </tr>
+            ''' if config.get("calc_tax", 0) > 0 else ''}
+            <tr class="summary-total">
+                <td class="summary-label">GRAND TOTAL</td>
+                <td class="summary-value">${config.get('calc_grand_total', 0.0):,.2f}</td>
+            </tr>
+        </table>
+        
+        {f'''
+        <div class="signature-block">
+            <div class="signature-line"></div>
+            <div class="signature-name">{config.get("signature_name")}</div>
+            <div class="signature-label">Authorized Signature</div>
+        </div>
+        ''' if config.get("signature_name") else ''}
         
         <div class="footer">
             <p>Thank you for your business. Please contact us with any questions regarding this quotation.</p>
