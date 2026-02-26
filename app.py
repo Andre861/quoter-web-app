@@ -27,38 +27,70 @@ st.set_page_config(page_title="Quoter", page_icon="📝", layout="wide")
 
 # --- Login / Register UI ---
 if not st.session_state.authenticated:
-    st.title("Welcome to Quoter")
-    st.write("Please log in or register to continue.")
+    st.markdown("""
+        <style>
+        .login-title {
+            text-align: center;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0rem;
+            background: -webkit-linear-gradient(45deg, #4A90E2, #50E3C2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .login-subtitle {
+            text-align: center;
+            font-size: 1.1rem;
+            color: #888888;
+            margin-bottom: 2rem;
+        }
+        /* Hide the top padding of the page for the login screen to center better vertically */
+        .block-container {
+            padding-top: 5rem;
+        }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Use columns to narrow the form width and center it
+    _, col_center, _ = st.columns([1, 1.2, 1])
     
-    auth_mode = st.radio("Choose action", ["Login", "Register"], horizontal=True)
-    
-    if not supabase:
-        st.error("Supabase credentials are not configured properly. Please check your .env file.")
-        st.stop()
+    with col_center:
+        st.markdown('<p class="login-title">Quoter</p>', unsafe_allow_html=True)
+        st.markdown('<p class="login-subtitle">Sign in to your workspace</p>', unsafe_allow_html=True)
         
-    with st.form("auth_form"):
-        email = st.text_input("Email", placeholder="you@example.com")
-        password = st.text_input("Password", type="password")
-        submit_btn = st.form_submit_button("Submit")
-        
-        if submit_btn:
-            if not email or not password:
-                st.error("Please provide both email and password.")
-            elif auth_mode == "Login":
-                try:
-                    res = supabase.auth.sign_in_with_password({"email": email, "password": password})
-                    st.session_state.authenticated = True
-                    st.session_state.user_email = res.user.email
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Login failed: {e}")
-            elif auth_mode == "Register":
-                try:
-                    res = supabase.auth.sign_up({"email": email, "password": password})
-                    st.success("Registration successful! You can now log in.")
-                except Exception as e:
-                    st.error(f"Registration failed: {e}")
-                    
+        with st.container(border=True):
+            auth_mode = st.radio("Select Action", ["Login", "Register"], horizontal=True, label_visibility="collapsed")
+            
+            if not supabase:
+                st.error("Supabase credentials are not configured properly. Please check your .env file.")
+                st.stop()
+                
+            with st.form("auth_form", clear_on_submit=False):
+                email = st.text_input("Email", placeholder="you@example.com")
+                password = st.text_input("Password", type="password")
+                
+                submit_label = "Sign In" if auth_mode == "Login" else "Create Account"
+                # Use primary type and container width for a modern look
+                submit_btn = st.form_submit_button(submit_label, type="primary", use_container_width=True)
+                
+                if submit_btn:
+                    if not email or not password:
+                        st.error("Please provide both email and password.")
+                    elif auth_mode == "Login":
+                        try:
+                            res = supabase.auth.sign_in_with_password({"email": email, "password": password})
+                            st.session_state.authenticated = True
+                            st.session_state.user_email = res.user.email
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Login failed: {e}")
+                    elif auth_mode == "Register":
+                        try:
+                            res = supabase.auth.sign_up({"email": email, "password": password})
+                            st.success("Registration successful! You can now log in.")
+                        except Exception as e:
+                            st.error(f"Registration failed: {e}")
+                        
     st.stop() # Stop rendering the rest of the app if not authenticated
 
 # --- Authenticated View ---
