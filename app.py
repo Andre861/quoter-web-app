@@ -412,19 +412,6 @@ if proceed:
                         # Apply markup correctly
                         marked_up_tables = apply_markup_to_data(edited_tables, markup_percentage)
                         
-                        # Calculate Subtotal over all tables
-                        subtotal = 0.0
-                        for mt in marked_up_tables:
-                            if not mt.empty:
-                                last_col = mt.columns[-1]
-                                try:
-                                    # Safely stringify to remove currency symbols before summing
-                                    clean_col = mt[last_col].astype(str).str.replace(r'[\$,]', '', regex=True)
-                                    total = pd.to_numeric(clean_col, errors='coerce').fillna(0).sum()
-                                    subtotal += total
-                                except Exception as sum_e:
-                                    print(f"Summing error on col {last_col}:", sum_e)
-                                    
                         # Smartly rename and filter columns to the core 4 to ensure totals calculation succeeds
                         clean_tables = []
                         for mt in marked_up_tables:
@@ -455,7 +442,21 @@ if proceed:
                             if final_order:
                                 clean_mt = clean_mt[final_order + [c for c in clean_mt.columns if c not in final_order]]
                                 
+                            # Fill NaNs with empty string so "NaN" doesn't print on the PDF
+                            clean_mt = clean_mt.fillna("")
                             clean_tables.append(clean_mt)
+                            
+                        # Calculate Subtotal over all CLEANED tables using the guaranteed "Total" column
+                        subtotal = 0.0
+                        for mt in clean_tables:
+                            if not mt.empty and "Total" in mt.columns:
+                                try:
+                                    # Safely stringify to remove currency symbols before summing
+                                    clean_col = mt["Total"].astype(str).str.replace(r'[\$,]', '', regex=True)
+                                    total_val = pd.to_numeric(clean_col, errors='coerce').fillna(0).sum()
+                                    subtotal += total_val
+                                except Exception as sum_e:
+                                    print(f"Summing error on Total column:", sum_e)
                             
                         running_total = subtotal
                         discount_val = discount_flat
