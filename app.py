@@ -25,81 +25,111 @@ if 'user_email' not in st.session_state:
     st.session_state.user_email = None
 st.set_page_config(page_title="Quoter", page_icon="📝", layout="wide")
 
+import base64
+
+def get_base64_of_bin_file(bin_file):
+    with open(bin_file, 'rb') as f:
+        data = f.read()
+    return base64.b64encode(data).decode()
+
 # --- Login / Register UI ---
 if not st.session_state.authenticated:
-    st.markdown("""
-        <style>
-        /* Modern Clean Background */
+    try:
+        bg_image = get_base64_of_bin_file("static/images/login_bg.png")
+        bg_css = f"""
+        .stApp {{
+            background-image: url("data:image/png;base64,{bg_image}");
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: #ffffff;
+        }}
+        """
+    except Exception:
+        bg_css = """
         .stApp {
-            background-color: #f7f9fa;
-            color: #333333;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            color: #ffffff;
         }
+        """
+
+    st.markdown(f"""
+        <style>
+        {bg_css}
         
         /* Typography for Title */
-        .login-title {
+        .login-title {{
             text-align: center;
-            font-size: 3rem;
+            font-size: 3.5rem;
             font-weight: 800;
             margin-bottom: 0rem;
-            color: #1A73E8;
+            background: -webkit-linear-gradient(45deg, #00C9FF, #92FE9D);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             letter-spacing: -1px;
-        }
+            text-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
+        }}
         
-        .login-subtitle {
+        .login-subtitle {{
             text-align: center;
             font-size: 1.1rem;
-            color: #5f6368;
+            color: #e2e8f0;
             margin-bottom: 2.5rem;
             font-weight: 400;
-        }
+            text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.5);
+        }}
         
-        /* Clean Container styling */
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-            background: #ffffff !important;
-            border-radius: 12px !important;
-            border: 1px solid #e0e0e0 !important;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
-            padding: 2rem !important;
-        }
+        /* Glassmorphism Container styling */
+        div[data-testid="stVerticalBlockBorderWrapper"] {{
+            background: rgba(20, 25, 30, 0.5) !important;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border-radius: 16px !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4) !important;
+            padding: 2.5rem !important;
+        }}
         
         /* Vertical Centering */
-        .block-container {
+        .block-container {{
             padding-top: 6rem;
             max-width: 900px !important;
-        }
+        }}
         
         /* Input fields and buttons styling */
-        div[data-baseweb="input"] {
-            background-color: #f1f3f4;
-            border-radius: 6px;
-            border: 1px solid transparent;
-        }
+        div[data-baseweb="input"] {{
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }}
         
-        div[data-baseweb="input"]:focus-within {
-            border-color: #1A73E8;
-            background-color: #ffffff;
-        }
+        div[data-baseweb="input"]:focus-within {{
+            border-color: #00C9FF;
+            background-color: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 1px #00C9FF;
+        }}
         
-        button[kind="primary"] {
-            background-color: #1A73E8;
+        button[kind="primary"] {{
+            background: linear-gradient(45deg, #00C9FF, #92FE9D);
             border: none;
-            color: white;
-            font-weight: 600;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-            padding: 0.5rem 1rem;
-        }
+            color: #000;
+            font-weight: 700;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            padding: 0.6rem 1rem;
+            letter-spacing: 0.5px;
+        }}
         
-        button[kind="primary"]:hover {
-            background-color: #1557b0;
-            box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3);
-        }
+        button[kind="primary"]:hover {{
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 201, 255, 0.5);
+        }}
         
         /* Form text colors */
-        .stTextInput p {
-            color: #444444 !important;
+        .stTextInput p, .stRadio p {{
+            color: #e2e8f0 !important;
             font-weight: 500;
-        }
+        }}
         
         </style>
     """, unsafe_allow_html=True)
