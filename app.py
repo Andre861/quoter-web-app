@@ -2,9 +2,72 @@ import streamlit as st
 import pandas as pd
 from dotenv import load_dotenv
 
+import os
+from supabase import create_client, Client
+
 load_dotenv()
 
+# --- Initialize Supabase ---
+@st.cache_resource
+def init_supabase() -> Client:
+    url: str = os.environ.get("SUPABASE_URL", "")
+    key: str = os.environ.get("SUPABASE_KEY", "")
+    if not url or not key:
+        return None
+    return create_client(url, key)
+
+supabase = init_supabase()
+
+# --- Initialize Session State ---
+if 'authenticated' not in st.session_state:
+    st.session_state.authenticated = False
+if 'user_email' not in st.session_state:
+    st.session_state.user_email = None
 st.set_page_config(page_title="Quoter", page_icon="📝", layout="wide")
+
+# --- Login / Register UI ---
+if not st.session_state.authenticated:
+    st.title("Welcome to Quoter")
+    st.write("Please log in or register to continue.")
+    
+    auth_mode = st.radio("Choose action", ["Login", "Register"], horizontal=True)
+    
+    if not supabase:
+        st.error("Supabase credentials are not configured properly. Please check your .env file.")
+        st.stop()
+        
+    with st.form("auth_form"):
+        email = st.text_input("Email", placeholder="you@example.com")
+        password = st.text_input("Password", type="password")
+        submit_btn = st.form_submit_button("Submit")
+        
+        if submit_btn:
+            if not email or not password:
+                st.error("Please provide both email and password.")
+            elif auth_mode == "Login":
+                try:
+                    res = supabase.auth.sign_in_with_password({"email": email, "password": password})
+                    st.session_state.authenticated = True
+                    st.session_state.user_email = res.user.email
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Login failed: {e}")
+            elif auth_mode == "Register":
+                try:
+                    res = supabase.auth.sign_up({"email": email, "password": password})
+                    st.success("Registration successful! You can now log in.")
+                except Exception as e:
+                    st.error(f"Registration failed: {e}")
+                    
+    st.stop() # Stop rendering the rest of the app if not authenticated
+
+# --- Authenticated View ---
+st.sidebar.markdown(f"**Logged in as:**<br>{st.session_state.user_email}", unsafe_allow_html=True)
+if st.sidebar.button("Logout"):
+    supabase.auth.sign_out()
+    st.session_state.authenticated = False
+    st.session_state.user_email = None
+    st.rerun()
 
 st.title("Quoter: Markup Generator")
 st.write("Upload a retailer quotation to apply markup and generate client-ready files.")
