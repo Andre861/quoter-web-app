@@ -34,112 +34,108 @@ def get_base64_of_bin_file(bin_file):
 
 # --- Login / Register UI ---
 if not st.session_state.authenticated:
-    try:
-        bg_image = get_base64_of_bin_file("static/images/login_bg.png")
-        bg_css = f"""
-        .stApp {{
-            background-image: url("data:image/png;base64,{bg_image}");
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: #ffffff;
-        }}
-        """
-    except Exception:
-        bg_css = """
-        .stApp {
-            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
-            color: #ffffff;
-        }
-        """
-
-    st.markdown(f"""
+    st.markdown("""
         <style>
-        {bg_css}
+        /* Modern Clean App Background (Soft Blue-Gray) */
+        .stApp {
+            background-color: #f8fafc;
+            color: #0f172a;
+        }
         
-        /* Typography for Title */
-        .login-title {{
+        /* Enlarged Typography for Title */
+        .login-title {
             text-align: center;
-            font-size: 3.5rem;
-            font-weight: 800;
-            margin-bottom: 0rem;
-            background: -webkit-linear-gradient(45deg, #00C9FF, #92FE9D);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: -1px;
-            text-shadow: 0px 4px 15px rgba(0, 0, 0, 0.4);
-        }}
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: -0.5rem;
+            color: #0f172a;
+            letter-spacing: -2.5px;
+        }
         
-        .login-subtitle {{
+        /* Highlight Accent on Title */
+        .title-accent {
+            color: #3b82f6;
+        }
+        
+        .login-subtitle {
             text-align: center;
-            font-size: 1.1rem;
-            color: #e2e8f0;
-            margin-bottom: 2.5rem;
-            font-weight: 400;
-            text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.5);
-        }}
+            font-size: 1.25rem;
+            color: #64748b;
+            margin-bottom: 3rem;
+            font-weight: 500;
+        }
         
-        /* Glassmorphism Container styling */
-        div[data-testid="stVerticalBlockBorderWrapper"] {{
-            background: rgba(20, 25, 30, 0.5) !important;
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+        /* Clean Solid White Container styling (No Glass) */
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            background-color: #ffffff !important;
             border-radius: 16px !important;
-            border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4) !important;
-            padding: 2.5rem !important;
-        }}
+            border: 1px solid #e2e8f0 !important;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01) !important;
+            padding: 2.5rem 3rem !important;
+        }
         
         /* Vertical Centering */
-        .block-container {{
-            padding-top: 6rem;
-            max-width: 900px !important;
-        }}
+        .block-container {
+            padding-top: 5rem;
+            max-width: 800px !important;
+        }
         
-        /* Input fields and buttons styling */
-        div[data-baseweb="input"] {{
-            background-color: rgba(0, 0, 0, 0.3);
+        /* High Contrast Input fields */
+        div[data-baseweb="input"] {
+            background-color: #f1f5f9;
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }}
+            border: 2px solid transparent;
+            transition: all 0.2s ease;
+        }
         
-        div[data-baseweb="input"]:focus-within {{
-            border-color: #00C9FF;
-            background-color: rgba(0, 0, 0, 0.5);
-            box-shadow: 0 0 0 1px #00C9FF;
-        }}
+        div[data-baseweb="input"]:focus-within {
+            border-color: #3b82f6;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
         
-        button[kind="primary"] {{
-            background: linear-gradient(45deg, #00C9FF, #92FE9D);
+        button[kind="primary"] {
+            background-color: #3b82f6;
             border: none;
-            color: #000;
-            font-weight: 700;
+            color: white;
+            font-weight: 600;
+            font-size: 1.1rem;
             border-radius: 8px;
-            transition: all 0.3s ease;
-            padding: 0.6rem 1rem;
-            letter-spacing: 0.5px;
-        }}
+            transition: all 0.2s ease;
+            padding: 0.75rem 1rem;
+            box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+            margin-top: 1rem;
+        }
         
-        button[kind="primary"]:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 201, 255, 0.5);
-        }}
+        button[kind="primary"]:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 8px -1px rgba(59, 130, 246, 0.3);
+        }
         
         /* Form text colors */
-        .stTextInput p, .stRadio p {{
-            color: #e2e8f0 !important;
-            font-weight: 500;
-        }}
+        .stTextInput p, .stRadio p, label {
+            color: #334155 !important;
+            font-weight: 600 !important;
+            font-size: 0.95rem;
+        }
         
+        /* Fix the error box if it appears */
+        .stAlert {
+            background-color: #fef2f2;
+            color: #991b1b;
+            border: 1px solid #f87171;
+            border-radius: 8px;
+        }
         </style>
     """, unsafe_allow_html=True)
 
     # Use columns to narrow the form width and center it
-    _, col_center, _ = st.columns([1, 1.2, 1])
+    _, col_center, _ = st.columns([1, 1.4, 1])
     
     with col_center:
-        st.markdown('<p class="login-title">Quoter</p>', unsafe_allow_html=True)
-        st.markdown('<p class="login-subtitle">Sign in to your workspace</p>', unsafe_allow_html=True)
+        st.markdown('<p class="login-title">Quot<span class="title-accent">er</span></p>', unsafe_allow_html=True)
+        st.markdown('<p class="login-subtitle">Simplify your pricing workflow.</p>', unsafe_allow_html=True)
         
         with st.container(border=True):
             auth_mode = st.radio("Select Action", ["Login", "Register"], horizontal=True, label_visibility="collapsed")
@@ -149,11 +145,10 @@ if not st.session_state.authenticated:
                 st.stop()
                 
             with st.form("auth_form", clear_on_submit=False):
-                email = st.text_input("Email", placeholder="you@example.com")
+                email = st.text_input("Work Email", placeholder="you@company.com")
                 password = st.text_input("Password", type="password")
                 
                 submit_label = "Sign In" if auth_mode == "Login" else "Create Account"
-                # Use primary type and container width for a modern look
                 submit_btn = st.form_submit_button(submit_label, type="primary", use_container_width=True)
                 
                 if submit_btn:
