@@ -397,30 +397,13 @@ if proceed:
                     }
                     
                     try:
-                        # Calculate Total = Quantity * Unit Price dynamically for any row
+                        # 1. Normalize columns and calculate row totals
+                        normalized_tables = []
                         for df in edited_tables:
-                            if "Quantity" in df.columns and "Unit Price" in df.columns and "Total" in df.columns:
-                                q_clean = df["Quantity"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
-                                p_clean = df["Unit Price"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
-                                q = pd.to_numeric(q_clean, errors='coerce').fillna(1)
-                                p = pd.to_numeric(p_clean, errors='coerce').fillna(0)
-                                calc_total = q * p
-                                
-                                # Only overwrite Total if we calculated something != 0.
-                                # This allows users to type direct values into 'Total' for things like 'Shipping'
-                                user_clean = df["Total"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
-                                user_total = pd.to_numeric(user_clean, errors='coerce').fillna(0)
-                                df["Total"] = calc_total.where(calc_total != 0, user_total)
-                                    
-                        # Apply markup correctly
-                        marked_up_tables = apply_markup_to_data(edited_tables, markup_percentage)
-                        
-                        # Smartly rename and filter columns to the core 4 to ensure totals calculation succeeds
-                        clean_tables = []
-                        for mt in marked_up_tables:
+                            norm_df = df.copy()
                             rename_map = {}
                             cols_to_keep = []
-                            for c in mt.columns:
+                            for c in norm_df.columns:
                                 cl = str(c).lower()
                                 if 'total' in cl or 'amount' in cl: rename_map[c] = 'Total'
                                 elif 'price' in cl or 'unit' in cl or 'cost' in cl: rename_map[c] = 'Unit Price'
@@ -429,23 +412,45 @@ if proceed:
                                 
                                 if c in rename_map: cols_to_keep.append(c)
                                 
-                            # If no standard columns were found, keep everything to be safe
                             if not cols_to_keep:
-                                cols_to_keep = list(mt.columns)
+                                cols_to_keep = list(norm_df.columns)
                                 
-                            clean_mt = mt[cols_to_keep].copy()
-                            clean_mt.rename(columns=rename_map, inplace=True)
+                            norm_df = norm_df[cols_to_keep]
+                            norm_df.rename(columns=rename_map, inplace=True)
                             
-                            # Drop duplicated column names if they mapped to the same target
-                            if len(clean_mt.columns) != len(set(clean_mt.columns)):
-                                clean_mt = clean_mt.loc[:, ~clean_mt.columns.duplicated()]
+                            # Drop duplicated column names
+                            if len(norm_df.columns) != len(set(norm_df.columns)):
+                                norm_df = norm_df.loc[:, ~norm_df.columns.duplicated()]
                                 
-                            # Reorder to exactly [Description, Quantity, Unit Price, Total]
-                            final_order = [c for c in ["Description", "Quantity", "Unit Price", "Total"] if c in clean_mt.columns]
+                            # Reorder columns natively
+                            final_order = [c for c in ["Description", "Quantity", "Unit Price", "Total"] if c in norm_df.columns]
                             if final_order:
-                                clean_mt = clean_mt[final_order + [c for c in clean_mt.columns if c not in final_order]]
+                                norm_df = norm_df[final_order + [c for c in norm_df.columns if c not in final_order]]
                                 
-                            # Fill NaNs with empty string so "NaN" doesn't print on the PDF
+                            # Calculate Total dynamically
+                            if "Quantity" in norm_df.columns and "Unit Price" in norm_df.columns:
+                                q_clean = norm_df["Quantity"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
+                                p_clean = norm_df["Unit Price"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
+                                q = pd.to_numeric(q_clean, errors='coerce').fillna(1)
+                                p = pd.to_numeric(p_clean, errors='coerce').fillna(0)
+                                calc_total = q * p
+                                
+                                if "Total" in norm_df.columns:
+                                    user_clean = norm_df["Total"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
+                                    user_total = pd.to_numeric(user_clean, errors='coerce').fillna(0)
+                                    norm_df["Total"] = calc_total.where(calc_total != 0, user_total)
+                                else:
+                                    norm_df["Total"] = calc_total
+                                    
+                            normalized_tables.append(norm_df)
+                                    
+                        # 2. Apply markup
+                        marked_up_tables = apply_markup_to_data(normalized_tables, markup_percentage)
+                        
+                        # 3. Finalize for PDF
+                        clean_tables = []
+                        for mt in marked_up_tables:
+                            clean_mt = mt.copy()
                             clean_mt = clean_mt.fillna("")
                             clean_tables.append(clean_mt)
                             
