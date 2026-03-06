@@ -1,4 +1,4 @@
-import pdfkit
+from weasyprint import HTML
 from jinja2 import Environment, FileSystemLoader
 import os
 from datetime import datetime, timedelta
@@ -317,11 +317,11 @@ def generate_final_pdf(marked_up_tables, config):
     """
     
     try:
-        # Generate the PDF from HTML string
-        pdf_bytes = pdfkit.from_string(html_content, False)
+        # Generate the PDF from HTML string using WeasyPrint
+        pdf_bytes = HTML(string=html_content).write_pdf()
         return pdf_bytes
     except Exception as e:
-        print(f"Error generating PDF (ensure wkhtmltopdf is installed): {e}")
+        print(f"Error generating PDF (ensure weasyprint is installed properly): {e}")
         return None
 
 def generate_excel_from_pdf(tables, config, markup_percentage):
