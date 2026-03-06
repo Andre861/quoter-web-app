@@ -400,13 +400,16 @@ if proceed:
                         # Calculate Total = Quantity * Unit Price dynamically for any row
                         for df in edited_tables:
                             if "Quantity" in df.columns and "Unit Price" in df.columns and "Total" in df.columns:
-                                q = pd.to_numeric(df["Quantity"], errors='coerce').fillna(1)
-                                p = pd.to_numeric(df["Unit Price"], errors='coerce').fillna(0)
+                                q_clean = df["Quantity"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
+                                p_clean = df["Unit Price"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
+                                q = pd.to_numeric(q_clean, errors='coerce').fillna(1)
+                                p = pd.to_numeric(p_clean, errors='coerce').fillna(0)
                                 calc_total = q * p
                                 
                                 # Only overwrite Total if we calculated something != 0.
                                 # This allows users to type direct values into 'Total' for things like 'Shipping'
-                                user_total = pd.to_numeric(df["Total"], errors='coerce').fillna(0)
+                                user_clean = df["Total"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
+                                user_total = pd.to_numeric(user_clean, errors='coerce').fillna(0)
                                 df["Total"] = calc_total.where(calc_total != 0, user_total)
                                     
                         # Apply markup correctly
