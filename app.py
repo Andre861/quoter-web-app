@@ -455,7 +455,7 @@ if proceed:
                             if not mt.empty and "Total" in mt.columns:
                                 try:
                                     # Safely stringify to remove currency symbols before summing
-                                    clean_col = mt["Total"].astype(str).str.replace(r'[\$,]', '', regex=True)
+                                    clean_col = mt["Total"].astype(str).str.replace(r'[^\d\.\-]', '', regex=True)
                                     total_val = pd.to_numeric(clean_col, errors='coerce').fillna(0).sum()
                                     subtotal += total_val
                                 except Exception as sum_e:
